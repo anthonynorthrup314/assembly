@@ -29,8 +29,12 @@ ifeq ($(uname_S),Windows)
 	NULL: nul
 endif
 
-# Default target
+# Default target, build the executable
 all: $(OUTFILE)
+
+# Run the project
+run: all
+	./$(OUTFILE)
 
 # Clean up
 clean:

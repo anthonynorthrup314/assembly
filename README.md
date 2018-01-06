@@ -11,7 +11,10 @@ Simply run the following command:
 ```
 
 Then on Windows you can execute `main.exe`, and on other operating systems, execute
-`main.out`
+`main.out`, or run the following:
+```
+> make run
+```
 
 ## Requirements
 
