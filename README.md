@@ -1,7 +1,13 @@
 # Assembly
 
-This project is creating an assembly simulator in C++, starting with basic
-[Y86](http://csapp.cs.cmu.edu/public/ch4-preview.pdf) commands.
+This project is creating an assembly simulator in C++, starting with basic Y86
+commands.
+
+## References
+
+Y86 assembly
+* [CMU.edu](http://csapp.cs.cmu.edu/public/ch4-preview.pdf)
+* [UTEXAS.edu](https://www.cs.utexas.edu/users/witchel/429/lectures/ISA_1.pdf)
 
 ## Running
 
