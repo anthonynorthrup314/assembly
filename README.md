@@ -1,6 +1,6 @@
 # Assembly
 
-This project is creating an assembly simulator in C++, starting with basic Y86
+This project is an assembly simulator in C++, starting with basic Y86
 commands.
 
 ## References
@@ -16,10 +16,15 @@ Simply run the following command:
 > make
 ```
 
-Then on Windows you can execute `main.exe`, and on other operating systems, execute
-`main.out`, or run the following:
+Once the program has compiled, run it with a source file as a parameter, or use
+the following to run the sample file
 ```
-> make run
+> make test
+```
+
+Or use the `FILE` flag to specify a file to test
+```
+> make test FILE=something.src
 ```
 
 ## Requirements

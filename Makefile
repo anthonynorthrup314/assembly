@@ -33,11 +33,7 @@ endif
 # Default target, build the executable
 all: $(OUTFILE)
 
-# Run the project
-run: all
-	./$(OUTFILE)
-
-# Test a specific file
+# Test a file
 test: all
 	./$(OUTFILE) $(FILE)
 
