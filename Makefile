@@ -21,6 +21,7 @@ CXX := gcc -lstdc++
 REM := rm -f
 REMRF := $(REM) -r
 NULL := /dev/null
+FILE := test.src
 
 # Windows specific macros
 ifeq ($(uname_S),Windows)
@@ -35,6 +36,10 @@ all: $(OUTFILE)
 # Run the project
 run: all
 	./$(OUTFILE)
+
+# Test a specific file
+test: all
+	./$(OUTFILE) $(FILE)
 
 # Clean up
 clean:
