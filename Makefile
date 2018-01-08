@@ -2,11 +2,16 @@
 
 # Detect OS
 # https://stackoverflow.com/a/14777895
+
 ifeq ($(OS),Windows_NT)
+	ifneq (%PATH%,$(shell echo %PATH%))
+		uname_S := Windows
+	else
 	ifneq (,$(findstring /cygdrive/,$(PATH)))
 		uname_S := Cygwin
 	else
-		uname_S := Windows
+		uname_S := Bash
+	endif
 	endif
 else
 	uname_S := $(shell uname -s)
@@ -22,14 +27,14 @@ endif
 # Macros
 CC := gcc
 CXX := g++ -std=c++11
-REM := rm -f
+REM := $(RM) -f
 REMRF := $(REM) -r
 NULL := /dev/null
 FILE := test.src
 
 # Windows specific macros
 ifeq ($(uname_S),Windows)
-	REM := del /F /Q
+	REM := del /Q /F
 	REMRF := $(REM) /S
 	NULL := nul
 endif
@@ -43,8 +48,8 @@ test: all
 
 # Clean up
 clean:
-	$(REM) $(OUTFILE)
-	$(REMRF) *.o
+	$(REM) $(OUTFILE) 2> $(NULL)
+	$(REMRF) *.o 2> $(NULL)
 
 # The executable
 $(OUTFILE): main.cpp.o
