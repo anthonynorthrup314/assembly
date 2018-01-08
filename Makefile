@@ -3,7 +3,11 @@
 # Detect OS
 # https://stackoverflow.com/a/14777895
 ifeq ($(OS),Windows_NT)
-	uname_S := Windows
+	ifneq (,$(findstring /cygdrive/,$(PATH)))
+		uname_S := Cygwin
+	else
+		uname_S := Windows
+	endif
 else
 	uname_S := $(shell uname -s)
 endif
@@ -17,7 +21,7 @@ endif
 
 # Macros
 CC := gcc
-CXX := gcc -lstdc++
+CXX := g++ -std=c++11
 REM := rm -f
 REMRF := $(REM) -r
 NULL := /dev/null
@@ -27,7 +31,7 @@ FILE := test.src
 ifeq ($(uname_S),Windows)
 	REM := del /F /Q
 	REMRF := $(REM) /S
-	NULL: nul
+	NULL := nul
 endif
 
 # Default target, build the executable
@@ -48,7 +52,7 @@ $(OUTFILE): main.cpp.o
 
 # Object files from C++ source
 %.cpp.o: %.cpp
-	$(CC) -c $< -o $@
+	$(CXX) -c $< -o $@
 
 # Object files from C source
 %.o: %.c
