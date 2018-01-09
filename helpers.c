@@ -116,3 +116,18 @@ const char* an_bool_str(const BOOL in)
 {
     return (0 == in) ? "false" : "true";
 }
+
+void an_bytes_int(const unsigned char in[4], unsigned int *out)
+{
+    *out = (in[3] << 24) | (in[2] << 16) | (in[1] << 8) | in[0];
+}
+
+void an_bytes_int_big(const unsigned char in[4], unsigned int *out)
+{
+    *out = (in[0] << 24) | (in[1] << 16) | (in[2] << 8) | in[3];
+}
+
+unsigned int an_sign(const unsigned int in)
+{
+    return (in >> 31) & 1;
+}
