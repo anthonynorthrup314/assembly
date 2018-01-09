@@ -33,7 +33,7 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
                 sign = -1;
             else if ('+' == c)
                 sign = 1;
-            else if (valid_digit)
+            else if (0 != valid_digit)
             {
                 prefix = (0 == digit);
                 value = digit;
@@ -44,7 +44,7 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
         else if ((1 == i) && (0 != sign))
         {
             // Check for prefix
-            if (valid_digit)
+            if (0 != valid_digit)
             {
                 prefix = (0 == digit);
                 value = digit;
@@ -52,7 +52,7 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
             else
                 return 0;
         }
-        else if (((1 == i) && prefix) || ((2 == i) && (0 != sign) && prefix))
+        else if (((1 == i) && (0 != prefix)) || ((2 == i) && (0 != sign) && (0 != prefix)))
         {
             // Check for base modifier
             switch(c)
@@ -70,7 +70,7 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
                     base = 16;
                     break;
                 default:
-                    if (valid_digit)
+                    if (0 != valid_digit)
                         value = value * base + digit;
                     else
                         return 0;
@@ -78,7 +78,7 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
         }
         else
         {
-            if (valid_digit)
+            if (0 != valid_digit)
                 value = value * base + digit;
             else
                 return 0;
@@ -92,4 +92,27 @@ BOOL an_parse_int_base(const char* in, int* out, int base)
 BOOL an_parse_int(const char* in, int* out)
 {
     return an_parse_int_base(in, out, 10);
+}
+
+void an_int_bytes(const unsigned int in, unsigned char *out)
+{
+    // Unsafe, little endian
+    out[0] = in & 0xFF;
+    out[1] = (in >> 8) & 0xFF;
+    out[2] = (in >> 16) & 0xFF;
+    out[3] = (in >> 24) & 0xFF;
+}
+
+void an_int_bytes_big(const unsigned int in, unsigned char *out)
+{
+    // Unsafe, big endian
+    out[0] = (in >> 24) & 0xFF;
+    out[1] = (in >> 16) & 0xFF;
+    out[2] = (in >> 8) & 0xFF;
+    out[3] = in & 0xFF;
+}
+
+const char* an_bool_str(const BOOL in)
+{
+    return (0 == in) ? "false" : "true";
 }
