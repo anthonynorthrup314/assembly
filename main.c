@@ -79,6 +79,7 @@ void state_free(STATE *state);
 BOOL state_compile(STATE *state, const char* filename);
 void state_run(STATE *state);
 void state_print(STATE *state);
+void state_memory(STATE *state, int lines);
 
 //// Main function
 
@@ -130,6 +131,7 @@ int main(int argc, char** argv)
 
     // Log the state
     state_print(&state);
+    state_memory(&state, 8);
 
 cleanup:
 
@@ -201,7 +203,19 @@ BOOL state_compile(STATE *state, const char* filename)
 
     printf("[!] TODO: Try compiling from '%s'\n", filename);
 
-    // Manually compiled information
+    // Manually compiled information from CMU.edu
+    const int program[] = {
+        0x30f40001, 0x000030f5, 0x00010000, 0x80240000,
+        0x00000000, 0x0d000000, 0xc0000000, 0x000b0000,
+        0x00a00000, 0xa05f2045, 0x30f00400, 0x0000a00f,
+        0x30f21400, 0x0000a02f, 0x80420000, 0x002054b0,
+        0x5f90a05f, 0x20455015, 0x08000000, 0x50250c00,
+        0x00006300, 0x62227378, 0x00000056, 0x61000000,
+        0x00606030, 0xf3040000, 0x00603130, 0xf3ffffff,
+        0xff603274, 0x5b000000, 0x2045b05f, 0x90000000,
+    };
+    for (int i = 0; i < 32; i++)
+        an_int_bytes_big(program[i], state->memory + (i * 4));
 
     return 1;
 }
@@ -223,19 +237,19 @@ void state_print(STATE *state)
     printf("Registers:\n");
     for (int i = 0; REGISTER_COUNT / 4 > i; i++) {
         for (int j = i * 4; ((i + 1) * 4 > j) && (REGISTER_COUNT > j); j++)
-            printf("  %-3s:   0x%08x", reg_names[j], state->registers.ids[j]);
+            printf("  %-3s:    0x%08x", reg_names[j], state->registers.ids[j]);
         printf("\n");
     }
 
     printf("Condition Codes:\n");
-    printf("  ZF: %13s", an_bool_str(state->codes.ZF));
-    printf("  SF: %13s", an_bool_str(state->codes.SF));
-    printf("  OF: %13s\n", an_bool_str(state->codes.OF));
+    printf("  ZF: %14s", an_bool_str(state->codes.ZF));
+    printf("  SF: %14s", an_bool_str(state->codes.SF));
+    printf("  OF: %14s\n", an_bool_str(state->codes.OF));
 
-    printf("Program Counter:\n  PC:    0x%08x", state->pc);
+    printf("Program Counter:\n  PC:     0x%08x", state->pc);
     if (0 < state->memory_size)
     {
-        printf("  Mem: ");
+        printf("  Mem:  ");
         for (int i = 0; i < 6; i++)
         {
             int pos = state->pc + i;
@@ -251,6 +265,37 @@ void state_print(STATE *state)
     
     const char* st_names[STATUS_COUNT] = STATUS_NAME_ARRAY;
     BOOL st_valid = (_FIRST > state->status) || (_LAST < state->status);
-    const char* st_str = st_valid ? "???" : st_names[state->status];
-    printf("Status:\n  STR: %12s  VAL: %12d\n", st_str, state->status);
+    const char* st_str = st_valid ? "???" : st_names[state->status - _FIRST];
+    printf("Status:\n  STR: %13s  VAL: %13d\n", st_str, state->status);
+}
+
+void state_memory(STATE *state, int lines)
+{
+    // Nothing passed?
+    if (NULL == state)
+        return;
+
+    // No memory?
+    if (0 >= state->memory_size)
+        return;
+    
+    printf("Memory:\n");
+    for (int i = 0; i < lines; i++)
+    {
+        printf("  Addr   0x%08x:", i * 16);
+        for (int j = 0; j < 4; j++)
+        {
+            printf("  ");
+            for (int k = 0; k < 4; k++)
+            {
+                int pos = i * 16 + j * 4 + k;
+                BOOL valid = (0 <= pos) && (state->memory_size > pos);
+                if (valid)
+                    printf("%0.2x", state->memory[pos]);
+                else
+                    printf("??");
+            }
+        }
+        printf("\n");
+    }
 }
