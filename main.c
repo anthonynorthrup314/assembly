@@ -212,6 +212,10 @@ BOOL state_compile(STATE *state, const char* filename)
     if (0 >= state->memory_size)
         return 0;
 
+    // Possibly use something like this:
+    // https://github.com/xsznix/js-y86/blob/master/js/y86.js : evalArgs
+    // https://github.com/xsznix/js-y86/blob/master/js/syntax.js
+
     printf("[!] TODO: Compile '%s'\n", filename);
 
     // Manually compiled information from CMU.edu
@@ -634,6 +638,53 @@ void state_run(STATE *state, STATE *state_original)
                 }
 
                 pc_step = 2;
+                break;
+
+            case 12: // iOPl
+                // Invalid registers?
+                if ((REGISTER_NONE != rA) || (0 > rB) || (REGISTER_COUNT <= rB))
+                {
+                    state->status = INS;
+                    return;
+                }
+
+                // Perform operation
+                switch(fn)
+                {
+                    case 0: // addl
+                        temp = state->registers.ids[rB] + val;
+                        state->codes.ZF = (0 == temp);
+                        state->codes.SF = an_sign(temp);
+                        state->codes.OF = ((1 == an_sign(state->registers.ids[rB])) && (0 == an_sign(temp)));
+                        state->registers.ids[rB] = temp;
+                        break;
+                    case 1: // subl
+                        temp = state->registers.ids[rB] - val;
+                        state->codes.ZF = (0 == temp);
+                        state->codes.SF = an_sign(temp);
+                        state->codes.OF = ((0 == an_sign(state->registers.ids[rB])) && (1 == an_sign(temp)));
+                        state->registers.ids[rB] = temp;
+                        break;
+                    case 2: // andl
+                        temp = state->registers.ids[rB] & val;
+                        state->codes.ZF = (0 == temp);
+                        state->codes.SF = an_sign(temp);
+                        state->codes.OF = 0;
+                        state->registers.ids[rB] = temp;
+                        break;
+                    case 3: // xorl
+                        temp = state->registers.ids[rB] ^ val;
+                        state->codes.ZF = (0 == temp);
+                        state->codes.SF = an_sign(temp);
+                        state->codes.OF = 0;
+                        state->registers.ids[rB] = temp;
+                        break;
+                    default:
+                        state->status = INS;
+                        return;
+                }
+
+                pc_step = 6;
                 break;
 
             default:
