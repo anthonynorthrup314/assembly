@@ -79,8 +79,6 @@ BOOL state_allocate(STATE *state, int size);
 void state_free(STATE *state);
 BOOL state_compile(STATE *state, const char* filename);
 void state_run(STATE *state);
-void state_print(STATE *state);
-void state_memory(STATE *state, int lines);
 BOOL state_clone(STATE *state_from, STATE *state_to);
 void state_changes(STATE *state_old, STATE *state_now);
 
@@ -242,81 +240,6 @@ void state_run(STATE *state)
         return;
     
     printf("[!] TODO: Run the program\n");
-}
-
-void state_print(STATE *state)
-{
-    // Nothing passed?
-    if (NULL == state)
-        return;
-    
-    printf("===== Current state: =====\n");
-
-    const char* reg_names[REGISTER_COUNT] = REGISTER_NAME_ARRAY;
-    printf("Registers:\n");
-    for (int i = 0; REGISTER_COUNT / 4 > i; i++) {
-        for (int j = i * 4; ((i + 1) * 4 > j) && (REGISTER_COUNT > j); j++)
-            printf("  %-3s:    0x%08x", reg_names[j], state->registers.ids[j]);
-        printf("\n");
-    }
-
-    printf("Condition Codes:\n");
-    printf("  ZF: %14s", an_bool_str(state->codes.ZF));
-    printf("  SF: %14s", an_bool_str(state->codes.SF));
-    printf("  OF: %14s\n", an_bool_str(state->codes.OF));
-
-    printf("Program Counter:\n  PC:     0x%08x", state->pc);
-    if (0 < state->memory_size)
-    {
-        printf("  Mem:  ");
-        for (int i = 0; 6 > i; i++)
-        {
-            int pos = state->pc + i;
-            BOOL valid = (0 <= pos) && (state->memory_size > pos);
-            if (valid)
-                printf("%0.2x", state->memory[pos]);
-            else
-                printf("??");
-        }
-    }
-    printf("\n");
-
-    
-    const char* st_names[STATUS_COUNT] = STATUS_NAME_ARRAY;
-    BOOL st_valid = (_FIRST > state->status) || (_LAST < state->status);
-    const char* st_str = st_valid ? "???" : st_names[state->status - _FIRST];
-    printf("Status:\n  STR: %13s  VAL: %13d\n", st_str, state->status);
-}
-
-void state_memory(STATE *state, int lines)
-{
-    // Nothing passed?
-    if (NULL == state)
-        return;
-
-    // No memory?
-    if (0 >= state->memory_size)
-        return;
-    
-    printf("Memory:\n");
-    for (int i = 0; lines > i; i++)
-    {
-        printf("  Addr   0x%08x:", i * 16);
-        for (int j = 0; 4 > j; j++)
-        {
-            printf("  ");
-            for (int k = 0; 4 > k; k++)
-            {
-                int pos = i * 16 + j * 4 + k;
-                BOOL valid = (0 <= pos) && (state->memory_size > pos);
-                if (valid)
-                    printf("%0.2x", state->memory[pos]);
-                else
-                    printf("??");
-            }
-        }
-        printf("\n");
-    }
 }
 
 BOOL state_clone(STATE *state_from, STATE *state_to)
