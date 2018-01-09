@@ -66,9 +66,10 @@ typedef struct _STATE
     REGISTERS registers;
     CONDITION_CODES codes;
     PROGRAM_STATUS status;
-    int pc;
     MEMORY memory;
     int memory_size;
+    int pc;
+    int step;
 } STATE;
 
 //// Forward declarations
@@ -80,6 +81,8 @@ BOOL state_compile(STATE *state, const char* filename);
 void state_run(STATE *state);
 void state_print(STATE *state);
 void state_memory(STATE *state, int lines);
+BOOL state_clone(STATE *state_from, STATE *state_to);
+void state_changes(STATE *state_old, STATE *state_now);
 
 //// Main function
 
@@ -103,7 +106,7 @@ int main(int argc, char** argv)
 
     // Supplied memory size?
     if (3 <= argc)
-        if ((0 == an_parse_int(argv[2], &memory_size)) || (1 > memory_size))
+        if ((0 == an_parse_int(argv[2], &memory_size)) || (1 > memory_size) || (0 != memory_size % 4))
         {
             memory_size = DEF_MEMORY_SIZE;
             printf("[!] Invalid memory size: '%s'", argv[2]);
@@ -127,15 +130,24 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    // Make a copy
+    STATE state_original = { 0 };
+    if (0 == state_clone(&state, &state_original))
+    {
+        printf("[!] Could not clone state\n");
+        state_free(&state);
+        return 0;
+    }
+
     // Run program
     state_run(&state);
 
-    // Log the state
-    state_print(&state);
-    state_memory(&state, 8);
+    // Log the changes
+    state_changes(&state_original, &state);
 
     // Free memory
     state_free(&state);
+    state_free(&state_original);
 
     return 0;
 }
@@ -200,7 +212,7 @@ BOOL state_compile(STATE *state, const char* filename)
     if (0 >= state->memory_size)
         return 0;
 
-    printf("[!] TODO: Try compiling from '%s'\n", filename);
+    printf("[!] TODO: Compile '%s'\n", filename);
 
     // Manually compiled information from CMU.edu
     const int program[] = {
@@ -213,7 +225,7 @@ BOOL state_compile(STATE *state, const char* filename)
         0x00606030, 0xf3040000, 0x00603130, 0xf3ffffff,
         0xff603274, 0x5b000000, 0x2045b05f, 0x90000000,
     };
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; 32 > i; i++)
         an_int_bytes_big(program[i], state->memory + (i * 4));
 
     return 1;
@@ -221,6 +233,14 @@ BOOL state_compile(STATE *state, const char* filename)
 
 void state_run(STATE *state)
 {
+    // Nothing passed?
+    if (NULL == state)
+        return;
+
+    // No memory?
+    if (0 >= state->memory_size)
+        return;
+    
     printf("[!] TODO: Run the program\n");
 }
 
@@ -249,7 +269,7 @@ void state_print(STATE *state)
     if (0 < state->memory_size)
     {
         printf("  Mem:  ");
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; 6 > i; i++)
         {
             int pos = state->pc + i;
             BOOL valid = (0 <= pos) && (state->memory_size > pos);
@@ -279,13 +299,13 @@ void state_memory(STATE *state, int lines)
         return;
     
     printf("Memory:\n");
-    for (int i = 0; i < lines; i++)
+    for (int i = 0; lines > i; i++)
     {
         printf("  Addr   0x%08x:", i * 16);
-        for (int j = 0; j < 4; j++)
+        for (int j = 0; 4 > j; j++)
         {
             printf("  ");
-            for (int k = 0; k < 4; k++)
+            for (int k = 0; 4 > k; k++)
             {
                 int pos = i * 16 + j * 4 + k;
                 BOOL valid = (0 <= pos) && (state->memory_size > pos);
@@ -296,5 +316,70 @@ void state_memory(STATE *state, int lines)
             }
         }
         printf("\n");
+    }
+}
+
+BOOL state_clone(STATE *state_from, STATE *state_to)
+{
+    // Nothing passed?
+    if ((NULL == state_from) || (NULL == state_to))
+        return 0;
+    
+    state_to->registers = state_from->registers;
+    state_to->codes = state_from->codes;
+    state_to->status = state_from->status;
+
+    // Try to copy memory if present
+    if (0 < state_from->memory_size)
+    {
+        state_to->memory = malloc(state_from->memory_size);
+        if (NULL == state_to->memory)
+            return 0;
+        memcpy(state_to->memory, state_from->memory, state_from->memory_size);
+    }
+
+    state_to->memory_size = state_from->memory_size;
+    state_to->pc = state_from->pc;
+    state_to->step = state_from->step;
+
+    return 1;
+}
+
+void state_changes(STATE *state_old, STATE *state_now)
+{
+    // Nothing passed?
+    if ((NULL == state_old) || (NULL == state_now))
+        return;
+
+    printf("Stopped in %d steps at PC = 0x%x.\n", state_now->step, state_now->pc);
+    
+    const char* st_names[STATUS_COUNT] = STATUS_NAME_ARRAY;
+    BOOL st_valid = (_FIRST > state_now->status) || (_LAST < state_now->status);
+    const char* st_str = st_valid ? "???" : st_names[state_now->status - _FIRST];
+    printf("Status '%s', CC Z=%d S=%d O=%d\n\n", st_str, state_now->codes.ZF, state_now->codes.SF, state_now->codes.OF);
+
+    const char* reg_names[REGISTER_COUNT] = REGISTER_NAME_ARRAY;
+    printf("Changes to registers:\n");
+    for (int i = 0; REGISTER_COUNT > i; i++)
+        if (state_old->registers.ids[i] != state_now->registers.ids[i])
+            printf("%%%3s:   0x%08x  0x%08x\n", reg_names[i], state_old->registers.ids[i], state_now->registers.ids[i]);
+    printf("\n");
+
+    printf("Changes to memory:\n");
+    for (int i = 0; state_now->memory_size / 4 > i; i++)
+    {
+        BOOL had_diff = 0;
+        for (int j = i * 4; (i + 1) * 4 > j; j++)
+            had_diff = had_diff || (state_old->memory[j] != state_now->memory[j]);
+        if (0 != had_diff)
+        {
+            printf("0x%04x: 0x", i * 4);
+            for (int j = i * 4; (i + 1) * 4 > j; j++)
+                printf("%02x", state_old->memory[j]);
+            printf("  0x");
+            for (int j = i * 4; (i + 1) * 4 > j; j++)
+                printf("%02x", state_now->memory[j]);
+            printf("\n");
+        }
     }
 }
