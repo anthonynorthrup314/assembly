@@ -686,6 +686,8 @@ void state_run(STATE *state, STATE *state_original)
 
                 pc_step = 6;
                 break;
+            
+            // TODO: Extra functions, such as enter (kinda) and leave
 
             default:
                 state->status = INS;
