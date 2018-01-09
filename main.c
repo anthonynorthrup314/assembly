@@ -325,7 +325,7 @@ void state_run(STATE *state, STATE *state_original)
                         condition = (0 != state->codes.ZF) || (state->codes.SF != state->codes.OF);
                         break;
                     case 2: // cmovl
-                        condition = state->codes.SF != state->codes.OF;
+                        condition = (state->codes.SF != state->codes.OF);
                         break;
                     case 3: // cmove
                         condition = (0 != state->codes.ZF);
@@ -493,7 +493,7 @@ void state_run(STATE *state, STATE *state_original)
                         condition = (0 != state->codes.ZF) || (state->codes.SF != state->codes.OF);
                         break;
                     case 2: // jl
-                        condition = state->codes.SF != state->codes.OF;
+                        condition = (state->codes.SF != state->codes.OF);
                         break;
                     case 3: // je
                         condition = (0 != state->codes.ZF);
@@ -678,18 +678,18 @@ void state_changes(STATE *state_old, STATE *state_now)
     if ((NULL == state_old) || (NULL == state_now))
         return;
 
-    printf("Stopped in %d steps at PC = 0x%x.\n", state_now->step, state_now->pc);
+    printf("Stopped in %d steps at PC = 0x%x.", state_now->step, state_now->pc);
     
     const char* st_names[STATUS_COUNT] = STATUS_NAME_ARRAY;
     BOOL st_valid = (_FIRST > state_now->status) || (_LAST < state_now->status);
     const char* st_str = st_valid ? "???" : st_names[state_now->status - _FIRST];
-    printf("Status '%s', CC Z=%d S=%d O=%d\n\n", st_str, state_now->codes.ZF, state_now->codes.SF, state_now->codes.OF);
+    printf("  Status '%s', CC Z=%d S=%d O=%d\n", st_str, state_now->codes.ZF, state_now->codes.SF, state_now->codes.OF);
 
     const char* reg_names[REGISTER_COUNT] = REGISTER_NAME_ARRAY;
     printf("Changes to registers:\n");
     for (int i = 0; REGISTER_COUNT > i; i++)
         if (state_old->registers.ids[i] != state_now->registers.ids[i])
-            printf("%%%3s:   0x%08x  0x%08x\n", reg_names[i], state_old->registers.ids[i], state_now->registers.ids[i]);
+            printf("%%%3s:   0x%08x      0x%08x\n", reg_names[i], state_old->registers.ids[i], state_now->registers.ids[i]);
     printf("\n");
 
     printf("Changes to memory:\n");
@@ -703,7 +703,7 @@ void state_changes(STATE *state_old, STATE *state_now)
             printf("0x%04x: 0x", i * 4);
             for (int j = (i + 1) * 4 - 1; i * 4 <= j; j--)
                 printf("%02x", state_old->memory[j]);
-            printf("  0x");
+            printf("      0x");
             for (int j = (i + 1) * 4 - 1; i * 4 <= j; j--)
                 printf("%02x", state_now->memory[j]);
             printf("\n");
