@@ -31,6 +31,7 @@ REM := $(RM) -f
 REMRF := $(REM) -r
 NULL := /dev/null
 FILE := test.src
+MEMORY := 
 
 # Windows specific macros
 ifeq ($(uname_S),Windows)
@@ -44,7 +45,7 @@ all: $(OUTFILE)
 
 # Test a file
 test: all
-	./$(OUTFILE) $(FILE)
+	./$(OUTFILE) $(FILE) $(MEMORY)
 
 # Clean up
 clean:
@@ -52,8 +53,8 @@ clean:
 	$(REMRF) *.o 2> $(NULL)
 
 # The executable
-$(OUTFILE): main.cpp.o
-	$(CXX) $^ -o $@
+$(OUTFILE): main.o helpers.o
+	$(CC) $^ -o $@
 
 # Object files from C++ source
 %.cpp.o: %.cpp
