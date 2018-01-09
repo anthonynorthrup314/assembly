@@ -123,7 +123,8 @@ int main(int argc, char** argv)
     if (0 == state_compile(&state, source_file))
     {
         printf("[!] Failed to compile\n");
-        goto cleanup;
+        state_free(&state);
+        return 0;
     }
 
     // Run program
@@ -132,8 +133,6 @@ int main(int argc, char** argv)
     // Log the state
     state_print(&state);
     state_memory(&state, 8);
-
-cleanup:
 
     // Free memory
     state_free(&state);
